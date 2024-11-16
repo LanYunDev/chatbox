@@ -69,14 +69,14 @@ export function remove(session: Session) {
     store.set(atoms.sessionsAtom, (sessions) => sessions.filter((s) => s.id !== session.id))
 }
 
-export function clear(sessionId: string) {
-    const session = getSession(sessionId)
+export async function clear(sessionId: string) {
+    const session = await getSession(sessionId)
     if (!session) {
         return
     }
     modify({
         ...session,
-        messages: session.messages.filter((m) => m.role === 'system'),
+        messages: session.messages.filter((m: Message) => m.role === 'system'),
     })
 }
 
@@ -95,10 +95,10 @@ export async function copy(source: Session) {
     })
 }
 
-export function getSession(sessionId: string) {
-    const store = getDefaultStore()
-    const sessions = store.get(atoms.sessionsAtom)
-    return sessions.find((s) => s.id === sessionId)
+export async function getSession(sessionId: string) {
+    const store = await getDefaultStore()
+    const sessions = await store.get(atoms.sessionsAtom)
+    return sessions.find((s: Session) => s.id === sessionId)
 }
 
 export function insertMessage(sessionId: string, msg: Message) {
@@ -168,10 +168,10 @@ export async function submitNewUserMessage(params: {
 }
 
 export async function generate(sessionId: string, targetMsg: Message) {
-    const store = getDefaultStore()
-    const settings = store.get(atoms.settingsAtom)
+    const store = await getDefaultStore()
+    const settings = await store.get(atoms.settingsAtom)
     const configs = await platform.getConfig()
-    const session = getSession(sessionId)
+    const session = await getSession(sessionId)
     if (!session) {
         return
     }
@@ -194,7 +194,7 @@ export async function generate(sessionId: string, targetMsg: Message) {
     modifyMessage(sessionId, targetMsg)
 
     let messages = session.messages
-    let targetMsgIx = messages.findIndex((m) => m.id === targetMsg.id)
+    let targetMsgIx = messages.findIndex((m: Message) => m.id === targetMsg.id)
 
     try {
         const model = getModel(settings, configs)
@@ -246,9 +246,9 @@ export async function generate(sessionId: string, targetMsg: Message) {
 }
 
 async function _generateName(sessionId: string, modifyName: (sessionId: string, name: string) => void) {
-    const store = getDefaultStore()
-    const settings = store.get(atoms.settingsAtom)
-    const session = getSession(sessionId)
+    const store = await getDefaultStore()
+    const settings = await store.get(atoms.settingsAtom)
+    const session = await getSession(sessionId)
     if (!session) {
         return
     }
@@ -257,7 +257,7 @@ async function _generateName(sessionId: string, modifyName: (sessionId: string, 
         const model = getModel(settings, configs)
         let name = await model.chat(promptFormat.nameConversation(
             session.messages
-                .filter(m => m.role !== 'system')
+                .filter((m: Message) => m.role !== 'system')
                 .slice(0, 4),
             settings.language,
         ),

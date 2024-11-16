@@ -12,13 +12,13 @@ import webpackPaths from './webpack.paths'
 import checkNodeEnv from '../scripts/check-node-env'
 import deleteSourceMaps from '../scripts/delete-source-maps'
 
-checkNodeEnv('production')
+checkNodeEnv('development')
 deleteSourceMaps()
 
 const configuration: webpack.Configuration = {
     devtool: false,
 
-    mode: 'production',
+    mode: 'development',
 
     target: 'electron-main',
 
@@ -35,13 +35,13 @@ const configuration: webpack.Configuration = {
         },
     },
 
-    optimization: {
-        minimizer: [
-            new TerserPlugin({
-                parallel: true,
-            }),
-        ],
-    },
+    // optimization: {
+    //     minimizer: [
+    //         new TerserPlugin({
+    //             parallel: true,
+    //         }),
+    //     ],
+    // },
 
     plugins: [
         new BundleAnalyzerPlugin({
@@ -59,7 +59,7 @@ const configuration: webpack.Configuration = {
          * development checks
          */
         new webpack.EnvironmentPlugin({
-            NODE_ENV: 'production',
+            NODE_ENV: 'development',
             DEBUG_PROD: false,
             START_MINIMIZED: false,
         }),

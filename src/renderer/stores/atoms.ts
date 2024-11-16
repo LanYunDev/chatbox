@@ -13,8 +13,8 @@ export const settingsAtom = atom(
         const settings = get(_settingsAtom)
         return Object.assign({}, defaults.settings(), settings)
     },
-    (get, set, update: SetStateAction<Settings>) => {
-        const settings = get(_settingsAtom)
+    async (get, set, update: SetStateAction<Settings>) => {
+        const settings = await get(_settingsAtom)
         let newSettings = typeof update === 'function' ? update(settings) : update
         if (newSettings.proxy !== settings.proxy) {
             platform.ensureProxyConfig({ proxy: newSettings.proxy })
@@ -45,15 +45,15 @@ export const myCopilotsAtom = atomWithStorage<CopilotDetail[]>(StorageKey.MyCopi
 
 const _sessionsAtom = atomWithStorage<Session[]>(StorageKey.ChatSessions, [], storage)
 export const sessionsAtom = atom(
-    (get) => {
-        let sessions = get(_sessionsAtom)
+    async (get) => {
+        let sessions = await get(_sessionsAtom)
         if (sessions.length === 0) {
             sessions = defaults.sessions()
         }
         return sessions
     },
-    (get, set, update: SetStateAction<Session[]>) => {
-        const sessions = get(_sessionsAtom)
+    async (get, set, update: SetStateAction<Session[]>) => {
+        const sessions = await get(_sessionsAtom)
         let newSessions = typeof update === 'function' ? update(sessions) : update
         if (newSessions.length === 0) {
             newSessions = defaults.sessions()
@@ -61,8 +61,8 @@ export const sessionsAtom = atom(
         set(_sessionsAtom, newSessions)
     }
 )
-export const sortedSessionsAtom = atom((get) => {
-    return sortSessions(get(sessionsAtom))
+export const sortedSessionsAtom = atom(async (get) => {
+    return sortSessions(await get(sessionsAtom))
 })
 
 export function sortSessions(sessions: Session[]): Session[] {
@@ -71,9 +71,9 @@ export function sortSessions(sessions: Session[]): Session[] {
 
 const _currentSessionIdCachedAtom = atomWithStorage<string | null>('_currentSessionIdCachedAtom', null)
 export const currentSessionIdAtom = atom(
-    (get) => {
-        const idCached = get(_currentSessionIdCachedAtom)
-        const sessions = get(sortedSessionsAtom)
+    async (get) => {
+        const idCached = await get(_currentSessionIdCachedAtom)
+        const sessions = await get(sortedSessionsAtom)
         if (idCached && sessions.some((session) => session.id === idCached)) {
             return idCached
         }
@@ -84,9 +84,9 @@ export const currentSessionIdAtom = atom(
     }
 )
 
-export const currentSessionAtom = atom((get) => {
-    const id = get(currentSessionIdAtom)
-    const sessions = get(sessionsAtom)
+export const currentSessionAtom = atom(async (get) => {
+    const id = await get(currentSessionIdAtom)
+    const sessions = await get(sessionsAtom)
     let current = sessions.find((session) => session.id === id)
     if (!current) {
         return sessions[sessions.length - 1]    // fallback to the last session
@@ -94,14 +94,15 @@ export const currentSessionAtom = atom((get) => {
     return current
 })
 
-export const currentSessionNameAtom = selectAtom(currentSessionAtom, (s) => s.name)
-export const currsentSessionPicUrlAtom = selectAtom(currentSessionAtom, (s) => s.picUrl)
+export const currentSessionNameAtom = selectAtom(currentSessionAtom, async (s) => (await s).name)
+export const currsentSessionPicUrlAtom = selectAtom(currentSessionAtom, async (s) => (await s).picUrl)
 
 
-export const currentMessageListAtom = selectAtom(currentSessionAtom, (s) => {
+export const currentMessageListAtom = selectAtom(currentSessionAtom, async (s) => {
     let messageContext: Message[] = []
-    if (s.messages) {
-        messageContext = messageContext.concat(s.messages)
+    const session = await s;
+    if (session.messages) {
+        messageContext = messageContext.concat(session.messages)
     }
     return messageContext
 })

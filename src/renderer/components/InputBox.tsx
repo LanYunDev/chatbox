@@ -90,7 +90,7 @@ export default function InputBox(props: Props) {
                             <img className={cn('w-5 h-5', easterEgg ? 'animate-spin' : '')} src={icon} />
                         </MiniButton>
                         <MiniButton className='mr-2' style={{ color: theme.palette.text.primary }}
-                            onClick={() => setChatConfigDialogSession(sessionActions.getCurrentSession())}
+                            onClick={async () => setChatConfigDialogSession(await sessionActions.getCurrentSession())}
                             tooltipTitle={
                                 <div className='text-center inline-block'>
                                     <span>{t('Customize settings for the current conversation')}</span>

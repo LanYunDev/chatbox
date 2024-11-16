@@ -1,0 +1,170 @@
+name: Build
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        # node-version: [22.x]
+        runtime:
+          - osx-arm64
+          - osx-x64
+          - linux-x64
+          # - linux-armv7l
+          - linux-arm64
+          - win-x64
+          - win-arm64
+
+        include:
+          - runtime: osx-arm64
+            os: macOS-latest
+
+          - runtime: osx-x64
+            os: macOS-latest
+
+          - runtime: linux-x64
+            os: ubuntu-latest
+  
+          # - runtime: linux-armv7l
+          #   os: ubuntu-latest
+  
+          - runtime: linux-arm64
+            os: ubuntu-latest
+  
+          - runtime: win-x64
+            os: windows-latest
+  
+          - runtime: win-arm64
+            os: windows-latest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Use Node.js #${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        # node-version: ${{ matrix.node-version }}
+        node-version: 'latest'
+        cache: "npm"
+    - run: npm install
+    
+    - name: Get Version Number
+      id: getPackageInfo
+      uses: jaywcjlove/github-action-package@main
+      with:
+        path: ./release/app/package.json
+
+    - name: Set Version Number Variable
+      id: versionNumber
+      uses: actions/github-script@v7
+      env:
+        VERSION_NUMBER_NIGHTLY: ${{ steps.getPackageInfo.outputs.version }}-nightly
+      with:
+        result-encoding: string
+        script: |
+          return "${{ env.VERSION_NUMBER_NIGHTLY }}"
+
+    - name: Update package.json version
+      uses: jaywcjlove/github-action-package@main
+      with:
+        path: ./release/app/package.json
+        version: ${{ steps.versionNumber.outputs.result }}
+
+    - name: Install libarchive-tools
+      if: startsWith(matrix.os, 'ubuntu')
+      run: sudo apt update; sudo apt -y install libarchive-tools; echo "Version Number ${{ toJson(job) }} ${{ toJson(needs) }}"
+
+    - name: Build with Node.js #${{ matrix.node-version}}
+      run: npm install; npm run package
+
+    - name: ls Build File
+      if: startsWith(matrix.os, 'windows') == false
+      run: echo -e "\n构建目录内容如下 (Linux/macOS):"; ls -la release/build/
+
+    - name: ls Build File windows
+      if: startsWith(matrix.os, 'windows') && startsWith(matrix.runtime, 'win')
+      run: |
+        Write-Host "`n构建目录内容如下 (Windows):" -ForegroundColor Green
+        Get-ChildItem -Path "release\build\" -Force
+
+    - name: Upload .dmg arm64 Artifact
+      uses: actions/upload-artifact@v4
+      if: startsWith(matrix.os, 'macos') && startsWith(matrix.runtime, 'osx-arm64')
+      with:
+        name: Chatbox-${{ steps.versionNumber.outputs.result }}-mac-arm64.dmg
+        path: release/build/Chatbox\ CE-${{ steps.versionNumber.outputs.result }}-arm64.dmg
+
+    - name: Upload .dmg x64 Artifact
+      uses: actions/upload-artifact@v4
+      if: startsWith(matrix.os, 'macos') && startsWith(matrix.runtime, 'osx-x64')
+      with:
+        name: Chatbox-${{ steps.versionNumber.outputs.result }}-mac-x64.dmg
+        path: release/build/Chatbox\ CE-${{ steps.versionNumber.outputs.result }}.dmg
+
+    - name: Upload .deb arm64 x64 Artifact
+      uses: actions/upload-artifact@v4
+      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
+      with:
+        name: Chatbox-${{ steps.versionNumber.outputs.result }}_arm64.deb
+        path: release/build/Chatbox\ CE-${{ steps.versionNumber.outputs.result }}-arm64.deb
+
+    - name: Upload .AppImage arm64 x64 Artifact
+      uses: actions/upload-artifact@v4
+      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
+      with:
+        name: Chatbox-${{ steps.versionNumber.outputs.result }}_arm64.AppImage
+        path: release/build/Chatbox\ CE-${{ steps.versionNumber.outputs.result }}-arm64.AppImage
+
+    - name: Upload .AppImage x86_64 Artifact
+      uses: actions/upload-artifact@v4
+      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
+      with:
+        name: Chatbox-${{ steps.versionNumber.outputs.result }}-x86_64.AppImage
+        path: release/build/Chatbox\ CE-${{ steps.versionNumber.outputs.result }}-x86_64.AppImage
+
+    - name: Upload .deb amd x64 Artifact
+      uses: actions/upload-artifact@v4
+      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
+      with:
+        name: Chatbox-${{ steps.versionNumber.outputs.result }}_amd64.deb
+        path: release/build/Chatbox\ CE-${{ steps.versionNumber.outputs.result }}-amd64.deb
+
+    # - name: Upload .deb ARMv7l Artifact
+    #   uses: actions/upload-artifact@v4
+    #   if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-armv7l')
+    #   with:
+    #     name: Chatbox-${{ steps.versionNumber.outputs.result }}_armv7l.deb
+    #     path: release/build/Chatbox\ CE-${{ steps.versionNumber.outputs.result }}-armv7l.deb
+
+    # - name: Upload .AppImage ARMv7l Artifact
+    #   uses: actions/upload-artifact@v4
+    #   if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-armv7l')
+    #   with:
+    #     name: Chatbox-${{ steps.versionNumber.outputs.result }}_armv7l.AppImage
+    #     path: release/build/Chatbox\ CE-${{ steps.versionNumber.outputs.result }}-armv7l.AppImage
+
+    - name: Upload .exe x64 Artifact
+      uses: actions/upload-artifact@v4
+      if: startsWith(matrix.os, 'windows') && startsWith(matrix.runtime, 'win-x64')
+      with:
+        name: Chatbox-${{ steps.versionNumber.outputs.result }}_x64-Setup.exe
+        path: release/build/Chatbox CE-${{ steps.versionNumber.outputs.result }}-Setup.exe
+
+    - name: Upload .exe arm64 Artifact
+      uses: actions/upload-artifact@v4
+      if: startsWith(matrix.os, 'windows') && startsWith(matrix.runtime, 'win-arm64')
+      with:
+        name: Chatbox-${{ steps.versionNumber.outputs.result }}_arm64-Setup.exe
+
+        path: release/build/Chatbox CE-${{ steps.versionNumber.outputs.result }}-Setup.exe
+
+

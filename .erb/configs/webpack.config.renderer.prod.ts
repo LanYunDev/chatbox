@@ -5,9 +5,9 @@
 import path from 'path'
 import webpack from 'webpack'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
-import MiniCssExtractPlugin from 'mini-css-extract-plugin'
+// import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
-import CssMinimizerPlugin from 'css-minimizer-webpack-plugin'
+// import CssMinimizerPlugin from 'css-minimizer-webpack-plugin'
 import { merge } from 'webpack-merge'
 import TerserPlugin from 'terser-webpack-plugin'
 import baseConfig from './webpack.config.base'
@@ -15,7 +15,7 @@ import webpackPaths from './webpack.paths'
 import checkNodeEnv from '../scripts/check-node-env'
 import deleteSourceMaps from '../scripts/delete-source-maps'
 
-checkNodeEnv('production')
+checkNodeEnv('development')
 
 let enableSourceMap = false
 if (! enableSourceMap) {
@@ -25,7 +25,7 @@ if (! enableSourceMap) {
 const configuration: webpack.Configuration = {
     devtool: enableSourceMap ? 'source-map' : false,
 
-    mode: 'production',
+    mode: 'development',
 
     target: ['web', 'electron-renderer'],
 
@@ -45,7 +45,7 @@ const configuration: webpack.Configuration = {
             {
                 test: /\.s?(a|c)ss$/,
                 use: [
-                    MiniCssExtractPlugin.loader,
+                    // MiniCssExtractPlugin.loader,
                     {
                         loader: 'css-loader',
                         options: {
@@ -60,7 +60,9 @@ const configuration: webpack.Configuration = {
             },
             {
                 test: /\.s?(a|c)ss$/,
-                use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader', 'postcss-loader'],
+                use: [
+                    // MiniCssExtractPlugin.loader, 
+                    'css-loader', 'sass-loader', 'postcss-loader'],
                 exclude: /\.module\.s?(c|a)ss$/,
             },
             // Fonts
@@ -95,10 +97,10 @@ const configuration: webpack.Configuration = {
         ],
     },
 
-    optimization: {
-        minimize: true,
-        minimizer: [new TerserPlugin(), new CssMinimizerPlugin()],
-    },
+    // optimization: {
+    //     minimize: false,
+    //     minimizer: [new TerserPlugin(), new CssMinimizerPlugin()],
+    // },
 
     plugins: [
         /**
@@ -111,13 +113,13 @@ const configuration: webpack.Configuration = {
          * development checks
          */
         new webpack.EnvironmentPlugin({
-            NODE_ENV: 'production',
+            NODE_ENV: 'development',
             DEBUG_PROD: false,
         }),
 
-        new MiniCssExtractPlugin({
-            filename: 'style.css',
-        }),
+        // new MiniCssExtractPlugin({
+        //     filename: 'style.css',
+        // }),
 
         new BundleAnalyzerPlugin({
             analyzerMode: process.env.ANALYZE === 'true' ? 'server' : 'disabled',
@@ -127,11 +129,11 @@ const configuration: webpack.Configuration = {
         new HtmlWebpackPlugin({
             filename: 'index.html',
             template: path.join(webpackPaths.srcRendererPath, 'index.ejs'),
-            minify: {
-                collapseWhitespace: true,
-                removeAttributeQuotes: true,
-                removeComments: true,
-            },
+            // minify: {
+            //     collapseWhitespace: true,
+            //     removeAttributeQuotes: true,
+            //     removeComments: true,
+            // },
             isBrowser: false,
             isDevelopment: false,
             favicon: path.join(webpackPaths.srcRendererPath, 'favicon.ico'),

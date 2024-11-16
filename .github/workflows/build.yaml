@@ -11,7 +11,7 @@ jobs:
   build:
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [22.x]
         runtime:
           - osx-arm64
           - osx-x64

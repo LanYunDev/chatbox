@@ -88,12 +88,12 @@ jobs:
 
     - name: ls Build File
       if: startsWith(matrix.os, 'windows') == false
-      run: echo -e "\n构建目录内容如下 (Linux/macOS):"; ls -la release/build/
+      run: echo -e "\n构建目录内容如下:"; ls -la release/build/
 
     - name: ls Build File windows
       if: startsWith(matrix.os, 'windows') && startsWith(matrix.runtime, 'win')
       run: |
-        Write-Host "`n构建目录内容如下 (Windows):" -ForegroundColor Green
+        Write-Host "`n构建目录内容如下:" -ForegroundColor Green
         Get-ChildItem -Path "release\build\" -Force
 
     - name: Upload .dmg arm64 Artifact
@@ -112,14 +112,14 @@ jobs:
 
     - name: Upload .deb arm64 x64 Artifact
       uses: actions/upload-artifact@v4
-      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
+      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-arm64')
       with:
         name: Chatbox-${{ steps.versionNumber.outputs.result }}_arm64.deb
         path: release/build/Chatbox\ CE-${{ steps.versionNumber.outputs.result }}-arm64.deb
 
     - name: Upload .AppImage arm64 x64 Artifact
       uses: actions/upload-artifact@v4
-      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-x64')
+      if: startsWith(matrix.os, 'ubuntu') && startsWith(matrix.runtime, 'linux-arm64')
       with:
         name: Chatbox-${{ steps.versionNumber.outputs.result }}_arm64.AppImage
         path: release/build/Chatbox\ CE-${{ steps.versionNumber.outputs.result }}-arm64.AppImage

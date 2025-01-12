@@ -48,11 +48,6 @@ export const AIModelProviderMenuOptionList = [
         disabled: false,
     },
     {
-        value: ModelProvider.LMStudio,
-        label: aiProviderNameHash[ModelProvider.LMStudio],
-        disabled: false,
-    },
-     {
         value: ModelProvider.Claude,
         label: aiProviderNameHash[ModelProvider.Claude],
         disabled: false,
@@ -60,6 +55,11 @@ export const AIModelProviderMenuOptionList = [
     {
         value: ModelProvider.Ollama,
         label: aiProviderNameHash[ModelProvider.Ollama],
+        disabled: false,
+    },
+    {
+        value: ModelProvider.LMStudio,
+        label: aiProviderNameHash[ModelProvider.LMStudio],
         disabled: false,
     },
     {
@@ -91,7 +91,7 @@ export function getModelDisplayName(settings: Settings, sessionType: SessionType
         case ModelProvider.Ollama:
             return `Ollama (${settings.ollamaModel})`
         case ModelProvider.LMStudio:
-            return `LMStudio (${settings.LMStudioModel})`
+            return `LMStudio (${settings.lmStudioModel})`
         case ModelProvider.SiliconFlow:
             return `SiliconCloud (${settings.siliconCloudModel})`
         default:
